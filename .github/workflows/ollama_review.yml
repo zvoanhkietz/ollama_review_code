@@ -1,10 +1,8 @@
 name: Automated Ollama Code Review
-
 on:
   pull_request:
     branches:
       - main
-
 jobs:
   ollama_review:
     runs-on: ubuntu-latest
@@ -13,8 +11,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Install Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | bash
+          ollama pull codegemma
+        shell: bash
+
+      - name: Start Ollama Service
+        run: |
+          nohup ollama &>/dev/null &
+          sleep 10  # Wait for the service to start
+        shell: bash
+
+      - name: Verify Ollama Service
+        run: |
+          if ! curl -s http://127.0.0.1:11434/api/status; then
+            echo "Ollama service is not running"
+            exit 1
+          fi
+        shell: bash
+
       - name: Ollama Code Review
-        uses: zvoanhkietz/gh-code-review@main
+        uses: zakerby/gh-code-review@v0.0.3
         with:
           llm-model: 'codegemma'
         env:
